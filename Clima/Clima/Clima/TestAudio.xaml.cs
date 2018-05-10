@@ -1,7 +1,11 @@
 ﻿using Plugin.MediaManager;
 using Plugin.MediaManager.Abstractions;
+using Plugin.MediaManager.Abstractions.Enums;
+using Plugin.MediaManager.Abstractions.EventArguments;
+using Plugin.MediaManager.Abstractions.Implementations;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -14,42 +18,136 @@ namespace Clima
     [XamlCompilation(XamlCompilationOptions.Compile)]
     public partial class TestAudio : ContentPage
     {
-        private IAudioPlayer PlaybackController => CrossMediaManager.Current.AudioPlayer;
         public TestAudio()
         {
             InitializeComponent();
-            CrossMediaManager.Current.PlayingChanged += (sender, e) =>
-            {
-                Device.BeginInvokeOnMainThread(() =>
-                {
-                    ProgressBar.Progress = e.Progress;
-                    Duration.Text = "" + e.Duration.TotalSeconds + " seconds";
-                });
-            };
+            this.volumeLabel.Text = "Volume (0-" + CrossMediaManager.Current.VolumeManager.MaxVolume + ")";
+            //Initialize Volume settings to match interface
+            int.TryParse(this.volumeEntry.Text, out var vol);
+            CrossMediaManager.Current.VolumeManager.CurrentVolume = vol;
+            CrossMediaManager.Current.VolumeManager.Mute = false;
+        }
+
+        private void MainBtn_OnClicked(object sender, EventArgs e)
+        {
+            //Navigation.PushAsync(new MediaFormsPage());
         }
 
         protected override void OnAppearing()
         {
-            //videoView.Source = "http://sisteplay1.streamwowza.com:1935/radiohd/RAD25679/playlist.m3u8";
-            //videoView.Source = "https://audioboom.com/posts/5766044-follow-up-305.mp3";
-            //videoView.Source = "http://sc02.yertel.com:8094/;stream.mp3";
-            //videoView.Source = "http://69.175.20.242:8112/live";
-            videoView.Source = "rtsp://sisteplay1.streamwowza.com:1935/radiohd/RAD25679/";
+            base.OnAppearing();
+            CrossMediaManager.Current.StatusChanged += CurrentOnStatusChanged;
         }
 
-        void PlayClicked(object sender, System.EventArgs e)
+        protected override void OnDisappearing()
         {
-            PlaybackController.Play();
+            CrossMediaManager.Current.StatusChanged -= CurrentOnStatusChanged;
+            base.OnDisappearing();
         }
 
-        void PauseClicked(object sender, System.EventArgs e)
+        private void CurrentOnStatusChanged(object sender, StatusChangedEventArgs e)
         {
-            PlaybackController.Pause();
+            Debug.WriteLine($"MediaManager Status: {e.Status}");
         }
 
-        void StopClicked(object sender, System.EventArgs e)
+        private async void StopButton_OnClicked(object sender, EventArgs e)
         {
-            PlaybackController.Stop();
+            await CrossMediaManager.Current.Stop();
         }
+
+        private async void PlayAudio_OnClicked(object sender, EventArgs e)
+        {
+            var mediaFile = new MediaFile
+            {
+                Type = MediaFileType.Audio,
+                Availability = ResourceAvailability.Remote,
+                Url = "https://audioboom.com/posts/5766044-follow-up-305.mp3",
+                MetadataExtracted = true
+            };
+            await CrossMediaManager.Current.Play(mediaFile);
+        }
+
+        private async void PlayAudioMyTrack_OnClicked(object sender, EventArgs e)
+        {
+            var mediaFile = new MediaFile
+            {
+                Type = MediaFileType.Audio,
+                Availability = ResourceAvailability.Remote,
+                Url = "https://audioboom.com/posts/5766044-follow-up-305.mp3",
+                Metadata = new MediaFileMetadata() { Title = "My Title", Artist = "My Artist", Album = "My Album" },
+                MetadataExtracted = false
+            };
+            await CrossMediaManager.Current.Play(mediaFile);
+        }
+
+        private async void PlaylistButton_OnClicked(object sender, EventArgs e)
+        {
+            var list = new List<MediaFile>
+            {
+                new MediaFile
+                {
+                    Url = "https://audioboom.com/posts/5766044-follow-up-305.mp3?source=rss&amp;stitched=1",
+                    Type = MediaFileType.Audio,
+                    Metadata = new MediaFileMetadata
+                    {
+                        Title = "Test1"
+                    }
+                },
+                new MediaFile
+                {
+                    Url = "https://media.acast.com/mydadwroteaporno/s3e1-london-thursday15.55localtime/media.mp3",
+                    Type = MediaFileType.Audio,
+                    Metadata = new MediaFileMetadata
+                    {
+                        Title = "Test2"
+                    }
+                },
+                new MediaFile
+                {
+                    Url =
+                        "https://audioboom.com/posts/5770261-ep-306-a-theory-of-evolution.mp3?source=rss&amp;stitched=1",
+                    Type = MediaFileType.Audio,
+                    Metadata = new MediaFileMetadata
+                    {
+                        Title = "Test3"
+                    }
+                },
+                new MediaFile
+                {
+                    Url = "https://audioboom.com/posts/5723344-ep-304-the-4th-dimension.mp3?source=rss&amp;stitched=1",
+                    Type = MediaFileType.Audio,
+                    Metadata = new MediaFileMetadata
+                    {
+                        Title = "Test4"
+                    }
+                }
+            };
+            // Follow-Up 305
+            // Ep. 306: A Theory of Evolution
+            // Ep. 304: The 4th Dimension
+            await CrossMediaManager.Current.Play(list);
+        }
+
+        private void SetVolumeBtn_OnClicked(object sender, EventArgs e)
+        {
+            int.TryParse(this.volumeEntry.Text, out var vol);
+            CrossMediaManager.Current.VolumeManager.CurrentVolume = vol;
+        }
+
+        private void MutedBtn_OnClicked(object sender, EventArgs e)
+        {
+            if (CrossMediaManager.Current.VolumeManager.Mute)
+            {
+                CrossMediaManager.Current.VolumeManager.Mute = false;
+                mutedBtn.Text = "Mute";
+            }
+            else
+            {
+                CrossMediaManager.Current.VolumeManager.Mute = true;
+                mutedBtn.Text = "Unmute";
+            }
+        }
+
+
     }
 }
