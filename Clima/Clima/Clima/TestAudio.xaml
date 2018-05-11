@@ -8,7 +8,7 @@
             <Button x:Name="mainBtn"
                     Text="Click here to view a video"
                     Clicked="MainBtn_OnClicked" />
-            <Button Text="Play Audio (Show ID3 Metadata)"
+            <Button Text="FM La Barriada 98.9 - PLAY"
                         Clicked="PlayAudio_OnClicked" />
             <Button Text="Play Audio (Show User Metadata)"
                         Clicked="PlayAudioMyTrack_OnClicked" />

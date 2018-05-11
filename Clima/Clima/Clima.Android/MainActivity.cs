@@ -7,6 +7,9 @@ using Android.Views;
 using Android.Widget;
 using Android.OS;
 using Plugin.MediaManager.Forms.Android;
+using Plugin.MediaManager;
+using Plugin.MediaManager.Abstractions;
+using Plugin.MediaManager.Abstractions.Enums;
 
 namespace Clima.Droid
 {
@@ -20,10 +23,13 @@ namespace Clima.Droid
 
             base.OnCreate(bundle);
 
+            //CrossMediaManager.Current.MediaNotificationManager = new zoMediaNotificationManagerImplementation(Android.App.Application.Context, typeof(MediaPlayerService));
             VideoViewRenderer.Init();
             global::Xamarin.Forms.Forms.Init(this, bundle);
             LoadApplication(new App());
         }
     }
+
+    
 }
 

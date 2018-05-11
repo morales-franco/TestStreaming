@@ -48,6 +48,20 @@ namespace Clima
         private void CurrentOnStatusChanged(object sender, StatusChangedEventArgs e)
         {
             Debug.WriteLine($"MediaManager Status: {e.Status}");
+
+            if (e.Status == Plugin.MediaManager.Abstractions.Enums.MediaPlayerStatus.Stopped)
+                audioCleanup();
+        }
+
+        protected void audioCleanup()
+        {
+            if (CrossMediaManager.Current.AudioPlayer.Status != Plugin.MediaManager.Abstractions.Enums.MediaPlayerStatus.Stopped)
+                CrossMediaManager.Current.AudioPlayer.Stop();
+
+            if (CrossMediaManager.Current.MediaNotificationManager != null)
+            {
+                CrossMediaManager.Current.MediaNotificationManager.StopNotifications();
+            }
         }
 
         private async void StopButton_OnClicked(object sender, EventArgs e)
@@ -61,9 +75,13 @@ namespace Clima
             {
                 Type = MediaFileType.Audio,
                 Availability = ResourceAvailability.Remote,
-                Url = "https://audioboom.com/posts/5766044-follow-up-305.mp3",
-                MetadataExtracted = true
+                Url = "http://sisteplay1.streamwowza.com:1935/radiohd/RAD25679/playlist.m3u8",
+                MetadataExtracted = false,
+                Metadata = new MediaFileMetadata() {
+                    Title = "FM La Barriada 98.9"
+                }
             };
+            
             await CrossMediaManager.Current.Play(mediaFile);
         }
 
